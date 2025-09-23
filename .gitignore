@@ -1,0 +1,48 @@
+# Node.js dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+
+# Logs
+logs
+*.log
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+*.lcov
+.nyc_output
+
+# Cache directories
+.npm
+.eslintcache
+.cache
+.parcel-cache
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Temporary folders
+tmp/
+temp/
