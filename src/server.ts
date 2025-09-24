@@ -1,6 +1,8 @@
 import Fastify from 'fastify';
 import { healthRoutes } from './routes/health';
 import { config } from './config/config';
+import './db'
+import { githubWorker } from './workers/githubPoller';
 
 const app = Fastify({
   logger: {
@@ -11,7 +13,13 @@ const app = Fastify({
 app.register(healthRoutes);
 
 const start = async () => {
-  try {
+  try {    
+    if (config.github.repo) {
+      githubWorker.start()
+    } else {
+      console.warn('⚠️ GITHUB_REPO not configured, polling worker disabled')
+    }
+    
     await app.listen({ 
       port: config.port,
       host: config.host 
