@@ -100,6 +100,11 @@ export class GitHubPollingWorker {
     this.scheduler.start(() => this.processNewIssues(), config.pollingIntervalMs)
   }
 
+  async runOnce(): Promise<void> {
+    await this.processNewIssues()
+    console.log('✅ Initial sync completed')
+  }
+
   stop(): void {
     this.scheduler.stop()
   }
