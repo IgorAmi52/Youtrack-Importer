@@ -2,11 +2,11 @@
   "name": "youtrack-importer",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "tsx src/server.ts",
     "dev:watch": "tsx watch src/server.ts",
-    "build": "tsup src/server.ts --format cjs",
+    "build": "tsup src/server.ts --format esm",
     "start": "node dist/server.js",
     "test": "vitest",
     "test:watch": "vitest --watch",
@@ -19,7 +19,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/IgorAmi52/Youtrack-Importer/issues"
   },
