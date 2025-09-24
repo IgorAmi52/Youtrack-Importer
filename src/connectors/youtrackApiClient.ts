@@ -1,15 +1,16 @@
 import type { YouTrackIssue, YouTrackIssueRequest } from '../models/YouTrackIssue'
-import { config } from '../config/config'
+import type { Config } from '../config/config'
 
 export class YouTrackApiClient {
+  constructor(private config: Config) {}
 
   async getIssue(issueId: string): Promise<YouTrackIssue> {
-    const url = `${config.youtrack.baseUrl}/api/issues/${issueId}?fields=id,idReadable,summary,description,created,updated`
+    const url = `${this.config.youtrack.baseUrl}/api/issues/${issueId}?fields=id,idReadable,summary,description,created,updated`
     
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${config.youtrack.token}`,
+        'Authorization': `Bearer ${this.config.youtrack.token}`,
         'Accept': 'application/json'
       }
     })
@@ -28,16 +29,16 @@ export class YouTrackApiClient {
       ...issueData,
       project: { 
         $type: "Project",
-        shortName: config.youtrack.projectId 
+        shortName: this.config.youtrack.projectId 
       }
     }
 
-    const url = `${config.youtrack.baseUrl}/api/issues?fields=id,idReadable,summary,description,created,updated`
+    const url = `${this.config.youtrack.baseUrl}/api/issues?fields=id,idReadable,summary,description,created,updated`
     
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${config.youtrack.token}`,
+        'Authorization': `Bearer ${this.config.youtrack.token}`,
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
@@ -55,12 +56,12 @@ export class YouTrackApiClient {
   }
 
   async updateIssue(issueId: string, updateData: YouTrackIssueRequest): Promise<YouTrackIssue> {
-    const url = `${config.youtrack.baseUrl}/api/issues/${issueId}?fields=id,idReadable,summary,description,created,updated`
+    const url = `${this.config.youtrack.baseUrl}/api/issues/${issueId}?fields=id,idReadable,summary,description,created,updated`
     
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${config.youtrack.token}`,
+        'Authorization': `Bearer ${this.config.youtrack.token}`,
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
@@ -78,12 +79,12 @@ export class YouTrackApiClient {
   }
 
   async deleteIssue(issueId: string): Promise<void> {
-    const url = `${config.youtrack.baseUrl}/api/issues/${issueId}`
+    const url = `${this.config.youtrack.baseUrl}/api/issues/${issueId}`
     
     const response = await fetch(url, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${config.youtrack.token}`
+        'Authorization': `Bearer ${this.config.youtrack.token}`
       }
     })
 
@@ -95,12 +96,12 @@ export class YouTrackApiClient {
 
   async validateUser(login: string): Promise<boolean> {
     try {
-      const url = `${config.youtrack.baseUrl}/api/users?q=${login}&$top=1&fields=login,name`
+      const url = `${this.config.youtrack.baseUrl}/api/users?q=${login}&$top=1&fields=login,name`
       
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${config.youtrack.token}`,
+          'Authorization': `Bearer ${this.config.youtrack.token}`,
           'Accept': 'application/json'
         }
       })

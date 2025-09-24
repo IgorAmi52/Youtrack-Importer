@@ -1,9 +1,11 @@
-import { config } from '../config/config'
+import type { Config } from '../config/config'
 import type { GitHubIssue } from '../models/GitHubIssue'
 
 export class GitHubApiClient {
+  constructor(private config: Config) {}
+
   async fetchIssues(since?: string, page: number = 1): Promise<GitHubIssue[]> {
-    const url = new URL(`https://api.github.com/repos/${config.github.repo}/issues`)
+    const url = new URL(`https://api.github.com/repos/${this.config.github.repo}/issues`)
     
     const params = new URLSearchParams({
       state: 'all',
@@ -24,8 +26,8 @@ export class GitHubApiClient {
       'User-Agent': 'YouTrack-Importer'
     }
     
-    if (config.github.token) {
-      headers['Authorization'] = `Bearer ${config.github.token}`
+    if (this.config.github.token) {
+      headers['Authorization'] = `Bearer ${this.config.github.token}`
     }
 
     try {

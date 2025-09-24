@@ -3,16 +3,20 @@ import { GitHubService } from '../service/githubService'
 import { YouTrackService } from '../service/youtrackService'
 import { IssueProcessor } from '../service/issueProcessor'
 import { PollingScheduler } from '../utils/pollingScheduler'
-import { config } from '../config/config'
+import type { Config } from '../config/config'
 import type { GitHubIssue } from '../models/GitHubIssue'
 
 const LAST_MODIFIED_KEY = 'github_last_modified_time'
 
 export class GitHubPollingWorker {
-  private githubService = new GitHubService()
-  private youtrackService = new YouTrackService()
-  private processor = new IssueProcessor()
   private scheduler = new PollingScheduler()
+
+  constructor(
+    private config: Config,
+    private githubService: GitHubService,
+    private youtrackService: YouTrackService,
+    private processor: IssueProcessor
+  ) {}
 
   async processNewIssues(): Promise<void> {
     const lastModified = MetaRepo.get(LAST_MODIFIED_KEY)
@@ -37,7 +41,7 @@ export class GitHubPollingWorker {
     const githubFetcher = async () => {
       try {
         for await (const pageIssues of this.githubService.getIssuesPageByPage(sinceFilter)) {
-          while (pageQueue.length >= MAX_QUEUE_SIZE) {
+          while (pageQueue.length >= MAX_QUEUE_SIZE) { // Avoid memory bloat
             await new Promise(resolve => setTimeout(resolve, 50))
           }
           
@@ -66,11 +70,9 @@ export class GitHubPollingWorker {
           
           try {
             const result = await this.processor.processNewIssues(batch, lastModified)
-            
             if (result.processedCount > 0) {
-              await this.youtrackService.syncIssues(batch, result.youtrackIssues)
+              await this.youtrackService.syncIssues(result.syncIssues)
             }
-            
             if (result.newestTimestamp) {
               newestTimestamp = result.newestTimestamp
             }
@@ -97,7 +99,7 @@ export class GitHubPollingWorker {
     if (this.scheduler.running) {
       return
     }
-    this.scheduler.start(() => this.processNewIssues(), config.pollingIntervalMs)
+    this.scheduler.start(() => this.processNewIssues(), this.config.pollingIntervalMs)
   }
 
   async runOnce(): Promise<void> {
@@ -110,4 +112,3 @@ export class GitHubPollingWorker {
   }
 }
 
-export const githubWorker = new GitHubPollingWorker()

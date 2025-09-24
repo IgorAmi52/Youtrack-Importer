@@ -1,46 +1,46 @@
 import type { GitHubIssue } from '../models/GitHubIssue'
 import type { YouTrackIssueRequest } from '../models/YouTrackIssue'
+import type { SyncIssue } from '../models/SyncIssue'
 import { UsersMapRepo } from '../db/repo/usersMapRepo'
 import { LinksRepo } from '../db/repo/linksRepo'
 import { createContentHash } from '../utils/hash'
-import { config } from '../config/config'
+import type { Config } from '../config/config'
 import { YouTrackApiClient } from '../connectors/youtrackApiClient'
 
 export interface ProcessResult {
   processedCount: number
   newestTimestamp?: string | undefined
-  youtrackIssues: YouTrackIssueRequest[]
+  syncIssues: SyncIssue[]
 }
 
 export class IssueProcessor {
-  private apiClient = new YouTrackApiClient()
+  constructor(
+    private config: Config,
+    private apiClient: YouTrackApiClient
+  ) {}
 
-   async processNewIssues(issues: GitHubIssue[], lastModified?: string): Promise<ProcessResult> {
+  async processNewIssues(issues: GitHubIssue[], lastModified?: string): Promise<ProcessResult> {
     const lastCheck = lastModified ? new Date(lastModified) : new Date(0)
-    
-    const newIssues = issues
-      .filter(issue => new Date(issue.updated_at) > lastCheck)
-      .filter(issue => {
-        const existingLink = LinksRepo.get(config.github.repo, issue.number)
-        if (!existingLink) return true
-        
-        const currentContentHash = createContentHash(issue)
-        return existingLink.contentHash !== currentContentHash
-      })
-    
-    const youtrackIssues = await Promise.all(
-      newIssues.map(issue => this.mapGitHubToYouTrack(issue))
-    )
-    
-    return {
-      processedCount: newIssues.length,
-      youtrackIssues,
-      newestTimestamp: newIssues.length > 0 
-        ? newIssues.reduce((newest, issue) => 
-            new Date(issue.updated_at) > new Date(newest.updated_at) ? issue : newest
-          ).updated_at
-        : undefined
+    const syncIssues: SyncIssue[] = [];
+    for (const issue of issues) {
+      if (new Date(issue.updated_at) <= lastCheck) continue;
+      const existingLink = LinksRepo.get(this.config.github.repo, issue.number);
+      if (existingLink) {
+        const currentContentHash = createContentHash(issue);
+        if (existingLink.contentHash === currentContentHash) continue;
+      }
+      const youtrack = await this.mapGitHubToYouTrack(issue);
+      syncIssues.push({ github: issue, youtrack });
     }
+    return {
+      processedCount: syncIssues.length,
+      syncIssues,
+      newestTimestamp: syncIssues.length > 0
+        ? syncIssues.reduce((newest, s) =>
+            new Date(s.github.updated_at) > new Date(newest.github.updated_at) ? s : newest
+          ).github.updated_at
+        : undefined
+    };
   }
   
   private async validateYouTrackUser(login: string): Promise<boolean> {

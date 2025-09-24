@@ -10,7 +10,6 @@ export interface GitHubIssue {
   assignee?: {
     login: string
   } | null
-  html_url: string
   created_at: string
   body?: string
 }

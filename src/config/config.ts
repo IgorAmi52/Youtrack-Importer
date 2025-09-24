@@ -13,7 +13,27 @@ function requireEnv(name: string): string {
   return value
 }
 
-export const config = {
+export interface Config {
+  port: number
+  host: string
+  nodeEnv: string
+  logLevel: string
+  pollingIntervalMs: number
+  github: {
+    repo: string
+    token: string
+  }
+  youtrack: {
+    baseUrl: string
+    token: string
+    projectId: string
+  }
+  isDevelopment: () => boolean
+  isProduction: () => boolean
+  isTest: () => boolean
+}
+
+export const config: Config = {
   port: parseInt(process.env.PORT || '3000', 10),
   host: process.env.HOST || 'localhost',
   nodeEnv: process.env.NODE_ENV || 'development',

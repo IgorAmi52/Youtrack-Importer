@@ -1,11 +1,13 @@
 import Fastify from 'fastify';
 import { healthRoutes } from './routes/health';
 import { userMappingsRoutes } from './routes/userMappings';
-import { webhookRoutes } from './routes/webhook';
+import { createWebhookRoutes } from './routes/webhook';
 import { config } from './config/config';
 import { loadUserMappingsFromEnv } from './utils/userMappings';
 import './db'
-import { githubWorker } from './workers/githubPoller';
+import { createContainer } from './container';
+
+const container = createContainer(config);
 
 const app = Fastify({
   logger: config.isDevelopment() ? false : {
@@ -13,10 +15,12 @@ const app = Fastify({
   }
 });
 
-
 app.register(healthRoutes);
 app.register(userMappingsRoutes);
-app.register(webhookRoutes);
+app.register(createWebhookRoutes({
+  issueProcessor: container.issueProcessor,
+  youtrackService: container.youtrackService
+}));
 
 const start = async () => {
   try {
@@ -25,10 +29,10 @@ const start = async () => {
     if (config.github.repo) {
       if (process.env.GITHUB_WEBHOOK_SECRET) {
         console.log('🔗 GitHub webhook mode enabled')
-        await githubWorker.runOnce()
+        await container.githubWorker.runOnce()
       } else {
         console.log('📊 GitHub polling mode enabled')
-        githubWorker.start()
+        container.githubWorker.start()
       }
     } else {
       console.warn('⚠️ GITHUB_REPO not configured, GitHub sync disabled')

@@ -1,6 +1,6 @@
 import { YouTrackApiClient } from '../connectors/youtrackApiClient'
 import { LinksRepo, type Link } from '../db/repo/linksRepo'
-import { config } from '../config/config'
+import type { Config } from '../config/config'
 import { createContentHash } from '../utils/hash'
 import type { YouTrackIssue, YouTrackIssueRequest } from '../models/YouTrackIssue'
 import type { GitHubIssue } from '../models/GitHubIssue'
@@ -12,29 +12,26 @@ export interface SyncResult {
 }
 
 export class YouTrackService {
-  private apiClient = new YouTrackApiClient()
+  constructor(
+    private config: Config,
+    private apiClient: YouTrackApiClient
+  ) {}
 
-    async syncIssues(githubIssues: GitHubIssue[], youtrackDataList: YouTrackIssueRequest[]): Promise<SyncResult[]> {
-      if (githubIssues.length !== youtrackDataList.length) {
-        throw new Error('GitHub issues and YouTrack data arrays must have same length')
+  async syncIssues(syncIssues: { github: GitHubIssue, youtrack: YouTrackIssueRequest }[]): Promise<SyncResult[]> {
+    const syncPromises = syncIssues.map(async ({ github, youtrack }) => {
+      try {
+        return await this.syncIssue(github, youtrack)
+      } catch (error) {
+        console.error(`❌ Failed to sync GitHub #${github.number}:`, error)
+        return null
       }
-
-      const syncPromises = githubIssues.map(async (githubIssue, i) => {
-        const youtrackData = youtrackDataList[i]!
-        
-        try {
-          return await this.syncIssue(githubIssue, youtrackData)
-        } catch (error) {
-          console.error(`❌ Failed to sync GitHub #${githubIssue.number}:`, error)
-          return null
-        }
-      })
-      const results = await Promise.all(syncPromises)
-      return results.filter((result): result is SyncResult => result !== null)
+    })
+    const results = await Promise.all(syncPromises)
+    return results.filter((result): result is SyncResult => result !== null)
   }
 
   async syncIssue(githubIssue: GitHubIssue, youtrackData: YouTrackIssueRequest): Promise<SyncResult> {
-    const existingLink = LinksRepo.get(config.github.repo, githubIssue.number)
+    const existingLink = LinksRepo.get(this.config.github.repo, githubIssue.number)
     const currentContentHash = createContentHash(githubIssue)
     
     if (existingLink) {
@@ -56,7 +53,7 @@ export class YouTrackService {
       const updatedIssue = await this.apiClient.updateIssue(existingLink.youtrackIssueId, youtrackData)
       
       LinksRepo.upsert({
-        githubRepo: config.github.repo,
+        githubRepo: this.config.github.repo,
         githubIssueId: githubIssue.number,
         youtrackIssueId: updatedIssue.id,
         contentHash: currentContentHash,
@@ -83,7 +80,7 @@ export class YouTrackService {
     const createdIssue = await this.apiClient.createIssue(youtrackData)
     
     LinksRepo.upsert({
-      githubRepo: config.github.repo,
+      githubRepo: this.config.github.repo,
       githubIssueId: githubIssue.number,
       youtrackIssueId: createdIssue.id,
       contentHash: currentContentHash,

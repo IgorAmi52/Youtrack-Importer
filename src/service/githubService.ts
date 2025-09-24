@@ -2,7 +2,7 @@ import { GitHubApiClient } from '../connectors/githubApiClient'
 import type { GitHubIssue } from '../models/GitHubIssue'
 
 export class GitHubService {
-  private apiClient = new GitHubApiClient()
+  constructor(private apiClient: GitHubApiClient) {}
   
   async *getIssuesPageByPage(since?: string): AsyncGenerator<GitHubIssue[], void, unknown> {
     let page = 1
