@@ -1,6 +1,17 @@
 import dotenv from 'dotenv';
 
+const originalLog = console.log; // Turning off dotenv logs
+console.log = () => {};
 dotenv.config();
+console.log = originalLog;
+
+function requireEnv(name: string): string {
+  const value = process.env[name]
+  if (!value || value.trim() === '') {
+    throw new Error(`Missing or empty required environment variable: ${name}`)
+  }
+  return value
+}
 
 export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
@@ -8,20 +19,17 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   logLevel: process.env.LOG_LEVEL || 'info',
 
-  // Polling Configuration
   pollingIntervalMs: parseInt(process.env.POLLING_INTERVAL_MS || '10000', 10),
 
-  // GitHub Configuration
   github: {
-    repo: process.env.GITHUB_REPO || '',
-    token: process.env.GITHUB_TOKEN || '',
+    repo: requireEnv('GITHUB_REPO'),
+    token: requireEnv('GITHUB_TOKEN'),
   },
 
-  // YouTrack Configuration
   youtrack: {
-    baseUrl: process.env.YOUTRACK_BASE_URL || '',
-    token: process.env.YOUTRACK_TOKEN || '',
-    projectId: process.env.YOUTRACK_PROJECT_ID || '',
+    baseUrl: requireEnv('YOUTRACK_BASE_URL'),
+    token: requireEnv('YOUTRACK_TOKEN'),
+    projectId: requireEnv('YOUTRACK_PROJECT_ID'),
   },
 
   isDevelopment: () => config.nodeEnv === 'development',
