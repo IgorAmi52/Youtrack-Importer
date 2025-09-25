@@ -19,7 +19,8 @@ app.register(healthRoutes);
 app.register(userMappingsRoutes);
 app.register(createWebhookRoutes({
   issueProcessor: container.issueProcessor,
-  youtrackService: container.youtrackService
+  youtrackService: container.youtrackService,
+  config: container.config
 }));
 
 const start = async () => {
@@ -27,7 +28,7 @@ const start = async () => {
     loadUserMappingsFromEnv()
 
     if (config.github.repo) {
-      if (process.env.GITHUB_WEBHOOK_SECRET) {
+      if (config.github.webhookSecret) {
         console.log('🔗 GitHub webhook mode enabled')
         await container.githubWorker.runOnce()
       } else {

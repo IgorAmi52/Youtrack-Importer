@@ -2,21 +2,24 @@ import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
 import { verifyGitHubSignature } from '../utils/githubWebhook'
 import type { IssueProcessor } from '../service/issueProcessor'
 import type { YouTrackService } from '../service/youtrackService'
+import {type Config } from '../config/config'
+import type { C } from 'vitest/dist/chunks/environment.d.cL3nLXbE'
 
 interface WebhookDependencies {
   issueProcessor: IssueProcessor
   youtrackService: YouTrackService
+  config: Config
 }
 
 export function createWebhookRoutes(dependencies: WebhookDependencies): FastifyPluginAsync {
-  const { issueProcessor, youtrackService } = dependencies
+  const { issueProcessor, youtrackService, config } = dependencies
 
   return async function (fastify: FastifyInstance) {
     fastify.post('/webhook/github', async (request, reply) => {
       try {
         const signature = request.headers['x-hub-signature-256'] as string
-        if (signature && process.env.GITHUB_WEBHOOK_SECRET) {
-          if (!verifyGitHubSignature(JSON.stringify(request.body), signature)) {
+        if (signature && config.github.webhookSecret) {
+          if (!verifyGitHubSignature(JSON.stringify(request.body), signature, config.github.webhookSecret)) {
             return reply.status(401).send({ error: 'Invalid signature' })
           }
         }

@@ -1,7 +1,6 @@
 import crypto from 'crypto'
 
-export function verifyGitHubSignature(payload: string, signature: string): boolean {
-  const webhookSecret = process.env.GITHUB_WEBHOOK_SECRET
+export function verifyGitHubSignature(payload: string, signature: string, webhookSecret?: string): boolean {
   if (!webhookSecret) {
     console.warn('⚠️ GitHub webhook secret not configured, skipping verification')
     return true

@@ -22,6 +22,7 @@ export interface Config {
   github: {
     repo: string
     token: string
+    webhookSecret?: string
   }
   youtrack: {
     baseUrl: string
@@ -44,6 +45,7 @@ export const config: Config = {
   github: {
     repo: requireEnv('GITHUB_REPO'),
     token: requireEnv('GITHUB_TOKEN'),
+    webhookSecret: process.env.GITHUB_WEBHOOK_SECRET || '',
   },
 
   youtrack: {
