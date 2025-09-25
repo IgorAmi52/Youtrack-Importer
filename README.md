@@ -52,14 +52,14 @@ Works in **two modes**:
 
 You can add or update user mappings (for assignee sync) via the following API:
 
-**POST** `/user-mappings`
+**POST** `/api/user-mappings`
 
 **Body:**
 
 ```json
 {
-  "github": "github-username",
-  "youtrack": "youtrack-username"
+  "githubLogin": "github-username",
+  "youtrackUsername": "youtrack-username"
 }
 ```
 
@@ -172,6 +172,8 @@ docker compose up --build -d
    * **Content type**: `application/json`
    * **Secret**: same as `GITHUB_WEBHOOK_SECRET`
    * **Events**: Issues, Comments, PRs (or as needed)
+
+ **Note:** When setting the Payload URL in GitHub, make sure to include the `/webhook/github` path at the end. Without this, the webhook will not be received by the app.
 
 ---
 
