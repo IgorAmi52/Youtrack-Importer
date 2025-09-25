@@ -168,7 +168,7 @@ docker compose up --build -d
    **Settings → Webhooks → Add webhook**
 3. Fill the form:
 
-   * **Payload URL**: `https://<your-cloudflared-subdomain>/webhook`
+   * **Payload URL**: `https://<your-cloudflared-subdomain>/webhook/github`
    * **Content type**: `application/json`
    * **Secret**: same as `GITHUB_WEBHOOK_SECRET`
    * **Events**: Issues, Comments, PRs (or as needed)
