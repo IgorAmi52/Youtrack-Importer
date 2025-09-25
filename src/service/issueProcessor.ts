@@ -67,19 +67,20 @@ export class IssueProcessor {
       }
     ]
 
-    // Add assignee if valid
+    let assigneeField: any = {
+      $type: "SingleUserIssueCustomField",
+      name: "Assignee",
+      value: null
+    }
     const assigneeLogin = githubIssue.assignee?.login
     if (assigneeLogin) {
       const youtrackAssignee = UsersMapRepo.get(assigneeLogin)
       if (youtrackAssignee && await this.validateYouTrackUser(youtrackAssignee)) {
-        customFields.push({
-          $type: "SingleUserIssueCustomField",
-          name: "Assignee",
-          value: { login: youtrackAssignee }
-        })
+        assigneeField.value = { login: youtrackAssignee }
       }
     }
-    
+    customFields.push(assigneeField)
+
     return {
       summary: `GitHub #${githubIssue.number}: ${githubIssue.title}`,
       description: githubIssue.body || 'No description provided',
