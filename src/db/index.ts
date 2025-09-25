@@ -14,17 +14,14 @@ ensureFileDirectoryExists(DB_PATH)
 export const sqlite: BetterSqlite3.Database = new Database(DB_PATH)     
 
 function applyMigrations() {
-  const migrationsDir = getPathFromFile(import.meta.url, 'migrations')
-  
+  const migrationsDir = path.resolve(process.cwd(), 'migrations')
   if (!fs.existsSync(migrationsDir)) {
-    console.warn(`Migrations directory not found: ${migrationsDir}`)
+    console.warn(`Migrations directory not found at project root: ${migrationsDir}`)
     return
   }
-  
-  const files = fs.readdirSync(migrationsDir)   
+  const files = fs.readdirSync(migrationsDir)
     .filter(f => f.endsWith('.sql'))
-    .sort() 
-
+    .sort()
   for (const file of files) {
     const full = path.join(migrationsDir, file)
     const sql = fs.readFileSync(full, 'utf8')
